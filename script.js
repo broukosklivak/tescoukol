@@ -1,7 +1,8 @@
 window.onload = function(){
     getCityList().then(cityList => {
         const searchTerms = extractSearchTerms(cityList);
-        autocomplete(document.getElementById("myInput"), searchTerms);
+        const sortedSearchTerms = sortSearchTerms(searchTerms);
+        autocomplete(document.getElementById("myInput"), sortedSearchTerms);
     });
 }
 
@@ -12,7 +13,18 @@ async function getCityList(){
 }
 
 function extractSearchTerms(cityList){
-    return Object.values(cityList).map(city => city.name)
+    return Object.values(cityList).map(city => {
+        if(city.state != ""){
+            return city.name + ", " + city.country + ", " + city.state;
+        }
+        else{
+            return city.name + ", " + city.country;
+        }
+    })
+}
+
+function sortSearchTerms(terms){
+    return terms.sort()
 }
 
 function autocomplete(inp, arr){
@@ -32,7 +44,8 @@ function autocomplete(inp, arr){
 
         this.parentNode.appendChild(a);
 
-        for(i = 0; i < arr.length; i++){
+        let count = 0;
+        for(i = 0; i < arr.length && count < 100; i++){
             if(arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
                 b = document.createElement("DIV");
                 b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
@@ -44,6 +57,7 @@ function autocomplete(inp, arr){
                     closeAllLists();
                 });
                 a.appendChild(b);
+                count++;
             }
         }
     });
