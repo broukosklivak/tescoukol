@@ -2,7 +2,7 @@ window.onload = function(){
     getCityList().then(cityList => {
         const searchTerms = extractSearchTerms(cityList);
         const sortedSearchTerms = sortSearchTerms(searchTerms);
-        autocomplete(document.getElementById("myInput"), sortedSearchTerms);
+        autocomplete(document.getElementById("myInput"), sortedSearchTerms, cityList);
     });
 }
 
@@ -27,7 +27,13 @@ function sortSearchTerms(terms){
     return terms.sort()
 }
 
-function autocomplete(inp, arr){
+function selectCity(cityList, cityName){
+    return Object.values(cityList).find(city => {
+        return (city.name + ", " + city.country + ", " + city.state === cityName || city.name + ", " + city.country === cityName)
+    });
+}
+
+function autocomplete(inp, arr, cityList){
     let currentFocus;
 
     inp.addEventListener("input", function(e){
@@ -97,4 +103,31 @@ function autocomplete(inp, arr){
     document.addEventListener("click", function(e){
         closeAllLists(e.target);
     });
+
+    submit(inp, cityList)
+}
+
+function submit(inp, cityList){
+    const cityText = document.getElementById("cityText");
+    const form = document.getElementById("myForm");
+    form.addEventListener("submit", function(e){
+        e.preventDefault();
+        const selectedCity = selectCity(cityList, inp.value);
+        getWeatherData(selectedCity)
+            .then(weatherData => {
+                console.log(weatherData);
+                cityText.innerHTML = inp.value;
+            })
+            .catch(error => console.error('Error:', error))
+    });
+}
+
+async function getWeatherData(cityData){
+    const apiUrl = 'https://api.openweathermap.org/data/2.5/forecast?lat=' + cityData.coord.lat + '&lon=' + cityData.coord.lon + '&appid=3097a1417bbafbd6e40a98e639e9d104';
+    const response = await fetch(apiUrl);
+    if(!response.ok){
+        throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    return data;
 }
