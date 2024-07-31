@@ -2,7 +2,8 @@ window.onload = function(){
     getCityList().then(cityList => {
         const searchTerms = extractSearchTerms(cityList);
         const sortedSearchTerms = sortSearchTerms(searchTerms);
-        autocomplete(document.getElementById("myInput"), sortedSearchTerms, cityList);
+        setupAutocomplete(document.getElementById("myInput"), sortedSearchTerms, cityList);
+        setupFormSubmit(document.getElementById("myForm"), document.getElementById("myInput"), cityList, document.getElementById("cityText"));
     });
 }
 
@@ -14,13 +15,8 @@ async function getCityList(){
 
 function extractSearchTerms(cityList){
     return Object.values(cityList).map(city => {
-        if(city.state != ""){
-            return city.name + ", " + city.country + ", " + city.state;
-        }
-        else{
-            return city.name + ", " + city.country;
-        }
-    })
+        return city.state !== "" ? `${city.name}, ${city.country}, ${city.state}` : `${city.name}, ${city.country}`;
+    });
 }
 
 function sortSearchTerms(terms){
@@ -29,96 +25,109 @@ function sortSearchTerms(terms){
 
 function selectCity(cityList, cityName){
     return Object.values(cityList).find(city => {
-        return (city.name + ", " + city.country + ", " + city.state === cityName || city.name + ", " + city.country === cityName)
+        return `${city.name}, ${city.country}, ${city.state}` === cityName || `${city.name}, ${city.country}` === cityName;
     });
 }
 
-function autocomplete(inp, arr, cityList){
-    let currentFocus;
+function setupAutocomplete(inp, arr, cityList){
+    let currentFocus = -1
 
-    inp.addEventListener("input", function(e){
-        let a, b, i, val = this.value;
-
-        closeAllLists();
-        if(!val) return false;
-
-        currentFocus = -1;
-
-        a = document.createElement("DIV");
-        a.setAttribute("id", this.id + "autocomplete-list");
-        a.setAttribute("class", "autocomplete-items");
-
-        this.parentNode.appendChild(a);
-
-        let count = 0;
-        for(i = 0; i < arr.length && count < 100; i++){
-            if(arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
-                b = document.createElement("DIV");
-                b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
-                b.innerHTML += arr[i].substr(val.length);
-                b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
-
-                b.addEventListener("click", function(e){
-                    inp.value = this.getElementsByTagName("input")[0].value;
-                    closeAllLists();
-                });
-                a.appendChild(b);
-                count++;
-            }
-        }
+    inp.addEventListener("input", function(){
+        handleInputEvent(inp, arr, cityList, currentFocus);
     });
-
     inp.addEventListener("keydown", function(e){
-        var x = document.getElementById(this.id + "autocomplete-list");
-        if(x) x = x.getElementsByTagName("div");
-        if(e.keyCode == 40){
-            currentFocus ++;
-            addActive(x);
-        }
+        handleKeyDown(e, currentFocus);
     });
-
-    function addActive(x){
-        if(!x) return false;
-        removeActive(x);
-        if(currentFocus >= x.length) currentFocus = 0;
-        if(currentFocus < 0) currentFocus = (x.length - 1);
-        x[currentFocus].classList.add("autocomplete-active");
-    }
-
-    function removeActive(x){
-        for(var i = 0; i < x.length; i++){
-            x[i].classList.remove("autocomplete-active");
-        }
-    }
-
-    function closeAllLists(elmnt){
-        var x = document.getElementsByClassName("autocomplete-items");
-        for(var i = 0; i < x.length; i++){
-            if(elmnt != x[i] && elmnt != inp){
-                x[i].parentNode.removeChild(x[i]);
-            }
-        }
-    }
-
     document.addEventListener("click", function(e){
-        closeAllLists(e.target);
+        handleDocumentClick(e, inp);
     });
-
-    submit(inp, cityList)
 }
 
-function submit(inp, cityList){
-    const cityText = document.getElementById("cityText");
+function handleInputEvent(inp, arr, cityList, currentFocus){
+    const val = inp.value;
+    closeAllLists(inp);
+    if(!val) return false;
+
+    const listContainer = document.createElement("DIV");
+    listContainer.setAttribute("id", `${inp.id}-autocomplete-list`);
+    listContainer.setAttribute("class", "autocomplete-items");
+    inp.parentNode.appendChild(listContainer);
+
+    const matchingCities = arr.filter(term => term.substr(0, val.length).toUpperCase() === val.toUpperCase()).slice(0, 100);
+
+    matchingCities.forEach(city => {
+        const item = document.createElement("DIV");
+        item.innerHTML = `<strong>${city.substr(0, val.length)}</strong>${city.substr(val.length)}`;
+        item.innerHTML += `<input type='hidden' value='${city}'>`;
+        item.addEventListener("click", function(){
+            inp.value = this.getElementsByTagName("input")[0].value;
+            closeAllLists(inp);
+        });
+        listContainer.appendChild(item);
+    })
+}
+
+function handleKeyDown(e, currentFocus){
+    const listContainer = document.getElementById(`${e.target.id}-autocomplete-list`);
+    if(!listContainer) return;
+
+    const items = listContainer.getElementsByTagName("div");
+    if(e.keyCode == 40){
+        currentFocus++;
+        addActive(items, currentFocus);
+    } 
+    else if(e.keyCode == 38){
+        currentFocus--;
+        addActive(items, currentFocus);
+    }
+    else if(e.keyCode == 13){
+        e.preventDefault();
+        if(currentFocus > -1){
+            if(items) items[currentFocus].click();
+        }
+    }
+}
+
+function handleDocumentClick(e, inp){
+    closeAllLists(inp, e.target)
+}
+
+function addActive(items, currentFocus){
+    if(!items) return;
+    removeActive(items);
+    if(currentFocus >= items.length) currentFocus = 0;
+    if(currentFocus < 0) currentFocus = (items.length - 1);
+    items[currentFocus].classList.add("autocomplete-active");
+}
+
+function removeActive(items){
+    for(const item of items){
+        item.classList.remove("autocomplete-active");
+    }
+}
+
+function closeAllLists(inp, elmnt){
+    var items = document.getElementsByClassName("autocomplete-items");
+    for(const item of items){
+        if(elmnt !== item && elmnt !== inp){
+            item.parentNode.removeChild(item);
+        }
+    }
+}
+
+function setupFormSubmit(inp, cityList, cityText){
     const form = document.getElementById("myForm");
     form.addEventListener("submit", function(e){
         e.preventDefault();
         const selectedCity = selectCity(cityList, inp.value);
-        getWeatherData(selectedCity)
-            .then(weatherData => {
-                console.log(weatherData);
-                cityText.innerHTML = inp.value;
-            })
-            .catch(error => console.error('Error:', error))
+        if(selectedCity){
+            getWeatherData(selectedCity)
+                .then(weatherData => {
+                    console.log(weatherData);
+                    cityText.innerHTML = inp.value;
+                })
+                .catch(error => console.error('Error:', error))
+        }
     });
 }
 
