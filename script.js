@@ -73,10 +73,12 @@ function handleKeyDown(e, currentFocus){
 
     const items = listContainer.getElementsByTagName("div");
     if(e.keyCode == 40){
+        e.preventDefault();
         currentFocus++;
         addActive(items, currentFocus);
     } 
     else if(e.keyCode == 38){
+        e.preventDefault();
         currentFocus--;
         addActive(items, currentFocus);
     }
@@ -115,15 +117,14 @@ function closeAllLists(inp, elmnt){
     }
 }
 
-function setupFormSubmit(inp, cityList, cityText){
-    const form = document.getElementById("myForm");
+function setupFormSubmit(form, inp, cityList, cityText){
     form.addEventListener("submit", function(e){
         e.preventDefault();
         const selectedCity = selectCity(cityList, inp.value);
         if(selectedCity){
             getWeatherData(selectedCity)
                 .then(weatherData => {
-                    console.log(weatherData);
+                    createTable(weatherData);
                     cityText.innerHTML = inp.value;
                 })
                 .catch(error => console.error('Error:', error))
@@ -132,11 +133,39 @@ function setupFormSubmit(inp, cityList, cityText){
 }
 
 async function getWeatherData(cityData){
-    const apiUrl = 'https://api.openweathermap.org/data/2.5/forecast?lat=' + cityData.coord.lat + '&lon=' + cityData.coord.lon + '&appid=3097a1417bbafbd6e40a98e639e9d104';
+    const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${cityData.coord.lat}&lon=${cityData.coord.lon}&units=metric&appid=3097a1417bbafbd6e40a98e639e9d104`;
     const response = await fetch(apiUrl);
     if(!response.ok){
         throw new Error('Network response was not ok');
     }
     const data = await response.json();
     return data;
+}
+
+function createTable(weatherData){
+    const table = document.getElementById("myTable");
+    const tableContent = weatherData.list.reduce((acc, stamp, index, array) => {
+        const currentStampDate = stamp.dt_txt.split(" ")[0];
+        const timePart = stamp.dt_txt.split(" ")[1];
+        const temperature = stamp.main.temp;
+        const iconUrl = `https://openweathermap.org/img/wn/${stamp.weather[0].icon}.png`;
+
+        if (index === 0 || acc.prevStampDate !== currentStampDate) {
+            if (index !== 0) {
+                acc.html += '</tr>';
+            }
+            acc.html += `<tr><td>${currentStampDate}</td>`;
+        }
+
+        acc.html += `<td>${timePart}<br/>${temperature}°C<br/><img src="${iconUrl}"></td>`;
+        acc.prevStampDate = currentStampDate;
+
+        if (index === array.length - 1) {
+            acc.html += '</tr>';
+        }
+
+        return acc;
+    }, {html: '', prevStampDate: '' }).html;
+
+    table.innerHTML = tableContent;
 }
