@@ -133,7 +133,8 @@ function setupFormSubmit(form, inp, cityList, cityText){
 }
 
 async function getWeatherData(cityData){
-    const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${cityData.coord.lat}&lon=${cityData.coord.lon}&units=metric&appid=3097a1417bbafbd6e40a98e639e9d104`;
+    const unit = navigator.language === "en-US" ? "imperial" : "metric";
+    const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${cityData.coord.lat}&lon=${cityData.coord.lon}&units=${unit}&appid=3097a1417bbafbd6e40a98e639e9d104`;
     const response = await fetch(apiUrl);
     if(!response.ok){
         throw new Error('Network response was not ok');
@@ -144,20 +145,24 @@ async function getWeatherData(cityData){
 
 function createTable(weatherData){
     const table = document.getElementById("myTable");
+    const lang = navigator.language;
     const tableContent = weatherData.list.reduce((acc, stamp, index, array) => {
         const currentStampDate = stamp.dt_txt.split(" ")[0];
         const timePart = stamp.dt_txt.split(" ")[1];
         const temperature = stamp.main.temp;
         const iconUrl = `https://openweathermap.org/img/wn/${stamp.weather[0].icon}.png`;
 
+        const { displayTime, unit } = formatTime(timePart, lang);
+        const currentDisplayDate = formatDate(currentStampDate, lang);
+
         if (index === 0 || acc.prevStampDate !== currentStampDate) {
             if (index !== 0) {
                 acc.html += '</tr>';
             }
-            acc.html += `<tr><td>${currentStampDate}</td>`;
+            acc.html += `<tr><td>${currentDisplayDate}</td>`;
         }
 
-        acc.html += `<td>${timePart}<br/>${temperature}°C<br/><img src="${iconUrl}"></td>`;
+        acc.html += `<td>${displayTime}<br/>${temperature}°${unit}<br/><img src="${iconUrl}"></td>`;
         acc.prevStampDate = currentStampDate;
 
         if (index === array.length - 1) {
@@ -168,4 +173,56 @@ function createTable(weatherData){
     }, {html: '', prevStampDate: '' }).html;
 
     table.innerHTML = tableContent;
+}
+
+function formatTime(timePart, lang){
+    const timeArr = timePart.split(":");
+    const hour = parseInt(timeArr[0], 10);
+    const minute = timeArr[1];
+
+    const formatEnglish = () => {
+        if (hour > 12) {
+            return `${hour - 12}:${minute} PM`;
+        } else if (hour < 1) {
+            return `12:${minute} PM`;
+        } else {
+            return `${hour}:${minute} AM`;
+        }
+    };
+
+    const formatArabic = () => {
+        if (hour > 12) {
+            return `${hour - 12}:${minute} م`;
+        } else if (hour < 1) {
+            return `12:${minute} م`;
+        } else {
+            return `${hour}:${minute} ص`;
+        }
+    };
+
+    const formatDefault = () => `${timeArr[0]}:${minute}`;
+
+    const displayTime = lang === "en-US" ? formatEnglish()
+                      : lang === "ar" ? formatArabic()
+                      : formatDefault();
+
+    const unit = lang === "en-US" ? "F" : "C";
+
+    return { displayTime, unit };
+}
+
+function formatDate(currentStampDate, lang) {
+    const currentDateArr = currentStampDate.split("-");
+
+    const formatCS_DE_RU = () => `${currentDateArr[2]}.${currentDateArr[1]}.${currentDateArr[0]}`;
+    const formatEN_US = () => `${currentDateArr[1]}/${currentDateArr[2]}/${currentDateArr[0]}`;
+    const formatEN_FR_ES_AR = () => `${currentDateArr[2]}/${currentDateArr[1]}/${currentDateArr[0]}`;
+    const formatZH_CN_JA = () => `${currentDateArr[0]}/${currentDateArr[1]}/${currentDateArr[2]}`;
+    const formatDefault = () => `${currentDateArr[2]}/${currentDateArr[1]}/${currentDateArr[0]}`;
+
+    return lang === "cs" || lang === "de" || lang === "ru" ? formatCS_DE_RU()
+         : lang === "en-US" ? formatEN_US()
+         : lang === "en" || lang === "fr" || lang === "es" || lang === "ar" ? formatEN_FR_ES_AR()
+         : lang === "zh-CN" || lang === "ja" ? formatZH_CN_JA()
+         : formatDefault();
 }
