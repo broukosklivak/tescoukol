@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script type="text/javascript" src="script.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
 
     <title>Počasí</title>
 </head>
@@ -14,10 +17,12 @@
         <div class="autocomplete">
             <input id="myInput" type="text" name="city" placeholder="Město">
         </div>
-        <input type="submit">
+        <input type="submit" class="submit">
     </form>
-    <h2 id="cityText"></h2>
-    <table id="myTable">
-    </table>
+    <div class="printout">
+        <h2 id="cityText"></h2>
+        <table id="myTable">
+        </table>
+    </div>
 </body>
 </html>

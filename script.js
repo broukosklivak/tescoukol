@@ -57,6 +57,7 @@ function handleInputEvent(inp, arr, cityList, currentFocus){
 
     matchingCities.forEach(city => {
         const item = document.createElement("DIV");
+        item.setAttribute("class", "ac-item");
         item.innerHTML = `<strong>${city.substr(0, val.length)}</strong>${city.substr(val.length)}`;
         item.innerHTML += `<input type='hidden' value='${city}'>`;
         item.addEventListener("click", function(){
@@ -159,10 +160,10 @@ function createTable(weatherData){
             if (index !== 0) {
                 acc.html += '</tr>';
             }
-            acc.html += `<tr><td>${currentDisplayDate}</td>`;
+            acc.html += `<tr><td class="dateDisplay">${currentDisplayDate}</td>`;
         }
 
-        acc.html += `<td>${displayTime}<br/>${temperature}°${unit}<br/><img src="${iconUrl}"></td>`;
+        acc.html += `<td><strong>${displayTime}</strong><br/>${temperature}°${unit}<br/><img src="${iconUrl}"></td>`;
         acc.prevStampDate = currentStampDate;
 
         if (index === array.length - 1) {

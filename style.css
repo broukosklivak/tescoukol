@@ -1,4 +1,46 @@
-table, th, td {
-    border: 1px solid black;
+body {
+    font-family: "Rubik", sans-serif;
+    background-color: #95d6ea;
+    color: #15719f;
+}
+
+table, tr {
+    border: 5px solid #528ab4;
     border-collapse: collapse;
+    background-color: #7bc7dd;
+    text-align: center;
+}
+
+.dateDisplay {
+    border: 5px solid #528ab4;
+}
+
+td {
+    height: 100px;
+    width: 100px;
+}
+
+.printout {
+    margin: auto;
+    width: fit-content;
+}
+
+#myInput-autocomplete-list {
+    border: 2px solid #528ab4;
+    width: 188px;
+    max-height: 150px;
+    overflow: scroll;
+}
+
+.submit, .autocomplete {
+    float: left;
+    display: inline;
+}
+
+.ac-item:hover {
+    background-color: #7bc7dd;
+}
+
+.ac-item {
+    cursor: pointer;
 }
