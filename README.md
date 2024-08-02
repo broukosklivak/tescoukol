@@ -13,6 +13,7 @@ Aplikace, která poskytuje předpovědi počasí pro města po celém světě. O
 ### Předpoklady
 - Webový server pro obsluhu aplikačních souborů (při vývoji byl použit plugin Live Server pro VS Code). 
 - API klíč od OpenWeatherMap pro načítání údajů o počasí.
+- Webový prohlížeč (testovaná byla pouze aktuální verze prohlížeče Mozilla Firefox)
 
 ### Instalace
 
