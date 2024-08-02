@@ -151,7 +151,7 @@ function setupFormSubmit(form, inp, cityList, cityText){
 // Získání dat o počasí pro vybrané město
 async function getWeatherData(cityData){
     const unit = navigator.language === "en-US" ? "imperial" : "metric"; // Nastaví jednotky podle jazyka
-    const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${cityData.coord.lat}&lon=${cityData.coord.lon}&units=${unit}&appid=3097a1417bbafbd6e40a98e639e9d104`;
+    const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${cityData.coord.lat}&lon=${cityData.coord.lon}&units=${unit}&appid=YOUR_API_KEY`;
     const response = await fetch(apiUrl);
     if(!response.ok){
         throw new Error('Network response was not ok');
